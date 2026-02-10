@@ -133,7 +133,7 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label>المدرسة</Label>
-              <Select value={selectedSchool} onValueChange={setSelectedSchool} required>
+              <Select value={selectedSchool} onValueChange={setSelectedSchool}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر مدرستك" />
                 </SelectTrigger>

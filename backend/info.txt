@@ -1,0 +1,58 @@
+# Pages
+
+/                 → Landing (show top schools)
+/login            → Login
+/register         → Register (select your school)
+/challenges       → Today's challenges + submit proof
+/leaderboard      → You vs Class vs School vs City
+/profile          → Your badges + stats + share
+
+
+# Database Models
+
+Users
+├── id (uuid, PK)
+├── name (text)
+├── email (text, unique)
+├── password (text, hashed)
+├── school_id (uuid, FK)
+├── points (integer, default 0)
+└── created_at (timestamp)
+
+Schools
+├── id (uuid, PK)
+├── name (text)
+├── city (text)
+└── created_at (timestamp)
+
+Challenges
+├── id (uuid, PK)
+├── title (text)
+├── title_ar (text)
+├── description_ar (text)
+├── points (integer)
+├── is_active (boolean, default true)
+└── created_at (timestamp)
+
+UserChallenges
+├── id (uuid, PK)
+├── user_id (uuid, FK)
+├── challenge_id (uuid, FK)
+├── proof_url (text, required)
+├── status (text: pending/approved/rejected)
+└── submitted_at (timestamp)
+
+Badges
+├── id (uuid, PK)
+├── name (text)
+├── name_ar (text)
+├── icon (text, emoji or url)
+├── requirement_type (text: challenges_count/points_threshold)
+├── requirement_value (integer)
+└── created_at (timestamp)
+
+UserBadges
+├── id (uuid, PK)
+├── user_id (uuid, FK)
+├── badge_id (uuid, FK)
+└── earned_at (timestamp)

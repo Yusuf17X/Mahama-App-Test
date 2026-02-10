@@ -1,0 +1,89 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { schools } from "@/data/mockData";
+import { useMockLogin } from "@/contexts/AuthContext";
+
+const Register = () => {
+  const navigate = useNavigate();
+  const mockLogin = useMockLogin();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Replace with actual API call
+    // const res = await authApi.signup({ name, email, password, passwordConfirm, school_id });
+    // login(res.token, res.data.user);
+    mockLogin();
+    navigate("/challenges");
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <span className="text-5xl">📋</span>
+          <CardTitle className="mt-2 text-2xl">إنشاء حساب جديد</CardTitle>
+          <CardDescription>انضم للآلاف من الطلاب العراقيين</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">الاسم الكامل</Label>
+              <Input id="name" placeholder="أدخل اسمك الكامل" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Input id="email" type="email" placeholder="example@email.com" dir="ltr" className="text-left" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">كلمة المرور</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>المدرسة</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر مدرستك" />
+                </SelectTrigger>
+                <SelectContent>
+                  {schools.map((s) => (
+                    <SelectItem key={s._id} value={s._id}>{s.name} - {s.city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full">إنشاء حساب</Button>
+          </form>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            لديك حساب بالفعل؟{" "}
+            <button onClick={() => navigate("/login")} className="font-semibold text-primary hover:underline">
+              تسجيل الدخول
+            </button>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Register;

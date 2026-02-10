@@ -5,20 +5,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMockLogin } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
-  const mockLogin = useMockLogin();
+  const { login } = useAuth();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Replace with actual API call
-    // const res = await authApi.login(email, password);
-    // login(res.token, res.data.user);
-    mockLogin();
-    navigate("/challenges");
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const res = await authApi.login(email, password);
+      if (res.token && res.data?.user) {
+        login(res.token, res.data.user);
+        navigate("/challenges");
+      }
+    } catch (error) {
+      toast({
+        title: "❌ خطأ في تسجيل الدخول",
+        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,13 +53,14 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" type="email" placeholder="example@email.com" dir="ltr" className="text-left" required />
+              <Input id="email" name="email" type="email" placeholder="example@email.com" dir="ltr" className="text-left" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   required
@@ -53,7 +74,9 @@ const Login = () => {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full">تسجيل الدخول</Button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+            </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             ليس لديك حساب؟{" "}

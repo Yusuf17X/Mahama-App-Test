@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import AppHeader from "@/components/layout/AppHeader";
 import BottomNav from "@/components/layout/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
-import { userSubmissions } from "@/data/mockData";
+import { userChallengesApi } from "@/lib/api";
+import type { UserChallenge } from "@/lib/api";
 
 const statusLabels: Record<string, { text: string; icon: string; color: string }> = {
   pending: { text: "قيد المراجعة", icon: "🟡", color: "text-yellow-600" },
@@ -30,6 +32,25 @@ const formatDate = (dateStr: string) => {
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [submissions, setSubmissions] = useState<UserChallenge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const res = await userChallengesApi.getMySubmissions();
+        if (res.data?.userChallenges) {
+          setSubmissions(res.data.userChallenges);
+        }
+      } catch (error) {
+        console.error("Failed to fetch submissions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSubmissions();
+  }, []);
 
   if (!user) return null;
 
@@ -128,32 +149,42 @@ const Profile = () => {
         {/* Submitted Challenges */}
         <div>
           <h3 className="mb-3 text-lg font-bold text-foreground">📋 مهامي المرسلة</h3>
-          <Card>
-            <CardContent className="p-0">
-              {userSubmissions.map((sub, i) => {
-                const status = statusLabels[sub.status];
-                return (
-                  <div
-                    key={sub._id}
-                    className={`flex items-center justify-between px-4 py-3 ${
-                      i < userSubmissions.length - 1 ? "border-b" : ""
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{sub.challengeEmoji}</span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{sub.challengeTitle}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(sub.createdAt)}</p>
+          {isLoading ? (
+            <p className="text-center text-muted-foreground">جاري التحميل...</p>
+          ) : submissions.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                لم ترسل أي مهام بعد
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                {submissions.map((sub, i) => {
+                  const status = statusLabels[sub.status];
+                  return (
+                    <div
+                      key={sub._id}
+                      className={`flex items-center justify-between px-4 py-3 ${
+                        i < submissions.length - 1 ? "border-b" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{sub.challengeEmoji}</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{sub.challengeTitle}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(sub.createdAt)}</p>
+                        </div>
                       </div>
+                      <span className={`text-xs font-bold ${status.color}`}>
+                        {status.icon} {status.text}
+                      </span>
                     </div>
-                    <span className={`text-xs font-bold ${status.color}`}>
-                      {status.icon} {status.text}
-                    </span>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Recent Activity */}

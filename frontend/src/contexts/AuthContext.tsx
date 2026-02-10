@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { User } from "@/lib/api";
+import { authApi } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
@@ -8,65 +9,60 @@ interface AuthContextType {
   logout: () => void;
   isLoggedIn: boolean;
   isTeacherOrAdmin: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for development (API not ready yet)
-const MOCK_USER: User = {
-  _id: "mock-1",
-  name: "أحمد حسين",
-  email: "ahmed@example.com",
-  role: "student",
-  school_id: "school-1",
-  schoolName: "إعدادية المنصور",
-  schoolCity: "بغداد",
-  points: 120,
-  level: 2,
-  levelName: "متعلم",
-  challengesCompleted: 8,
-  streak: 5,
-  pointsToNextLevel: 80,
-  joinDate: "فبراير 2026",
-  ecoImpact: {
-    co2Saved: 15.3,
-    waterSaved: 240,
-    plasticSaved: 3.2,
-    energySaved: 18.5,
-    treesEquivalent: 2,
-  },
-  badges: [
-    { _id: "1", emoji: "⭐️", name: "الخطوة الأولى", earned: true },
-    { _id: "2", emoji: "🌱", name: "صديق البيئة", earned: true },
-    { _id: "3", emoji: "🏆", name: "بطل التحديات", earned: false },
-    { _id: "4", emoji: "💧", name: "حامي المياه", earned: false },
-    { _id: "5", emoji: "♻️", name: "خبير التدوير", earned: false },
-    { _id: "6", emoji: "🌍", name: "أسطورة بيئية", earned: false },
-  ],
-  recentActivity: [
-    { _id: "1", type: "challenge", icon: "✅", text: "أكملت مهمة: اجمع 5 قناني", points: 50, time: "منذ ساعتين" },
-    { _id: "2", type: "challenge", icon: "✅", text: "أكملت مهمة: استخدم قنينة ماء", points: 20, time: "أمس" },
-    { _id: "3", type: "badge", icon: "🎖", text: "حصلت على شارة: الخطوة الأولى", points: 0, time: "منذ 3 أيام" },
-  ],
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    const initAuth = async () => {
+      const savedToken = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
+      
+      if (savedToken && savedUser) {
+        try {
+          setToken(savedToken);
+          setUser(JSON.parse(savedUser));
+          
+          // Refresh user data from API
+          try {
+            const res = await authApi.getMe();
+            if (res.data?.user) {
+              setUser(res.data.user);
+              localStorage.setItem("user", JSON.stringify(res.data.user));
+            }
+          } catch (error) {
+            console.error("Failed to refresh user data:", error);
+          }
+        } catch {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
       }
-    }
+      setIsInitialized(true);
+    };
+    
+    initAuth();
   }, []);
+
+  const refreshUser = async () => {
+    if (!token) return;
+    
+    try {
+      const res = await authApi.getMe();
+      if (res.data?.user) {
+        setUser(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      }
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+    }
+  };
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -82,34 +78,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("user");
   };
 
-  // For development: auto-login with mock user
-  const mockLogin = () => {
-    login("mock-token", MOCK_USER);
-  };
-
   const isLoggedIn = !!user;
   const isTeacherOrAdmin = user?.role === "teacher" || user?.role === "admin";
+
+  // Don't render children until auth is initialized
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        user: user,
+        user,
         token,
-        login: isLoggedIn ? login : (t, u) => login(t, u),
+        login,
         logout,
         isLoggedIn,
         isTeacherOrAdmin,
+        refreshUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-};
-
-// Hook to use mock login for development
-export const useMockLogin = () => {
-  const { login } = useAuth();
-  return () => login("mock-token", MOCK_USER);
 };
 
 export const useAuth = () => {

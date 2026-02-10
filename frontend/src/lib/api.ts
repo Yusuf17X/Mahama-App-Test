@@ -91,6 +91,11 @@ export const userChallengesApi = {
   getMySubmissions: () =>
     request<{ userChallenges: UserChallenge[] }>("/user-challenges"),
 
+  // Gets all submissions for review (admin sees all, teacher sees school, student sees own)
+  // The backend endpoint filters based on user role
+  getAllForReview: () =>
+    request<{ userChallenges: UserChallenge[] }>("/user-challenges"),
+
   review: (id: string, status: "approved" | "rejected") =>
     request<{ userChallenge: UserChallenge }>(`/user-challenges/${id}`, {
       method: "PATCH",

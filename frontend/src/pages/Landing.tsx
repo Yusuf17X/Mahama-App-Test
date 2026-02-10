@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { topSchools, publicEcoImpact } from "@/data/mockData";
+import { dashboardApi } from "@/lib/api";
+import type { EcoStats, SchoolLeaderboardItem } from "@/lib/api";
 
 const features = [
   { icon: "📸", title: "مهام حقيقية", description: "صوّر إنجازاتك البيئية واكسب نقاط" },
@@ -10,16 +12,45 @@ const features = [
   { icon: "🏫", title: "مدرسة ضد مدرسة", description: "ساعد مدرستك للوصول للمركز الأول" },
 ];
 
-const ecoImpactItems = [
-  { icon: "🌿", label: "CO₂ الموفر", value: publicEcoImpact.co2Saved, unit: "كجم" },
-  { icon: "💧", label: "الماء الموفر", value: publicEcoImpact.waterSaved, unit: "لتر" },
-  { icon: "♻️", label: "البلاستيك الموفر", value: publicEcoImpact.plasticSaved, unit: "كجم" },
-  { icon: "⚡", label: "الطاقة الموفرة", value: publicEcoImpact.energySaved, unit: "كيلوواط" },
-  { icon: "🌳", label: "ما يعادل", value: publicEcoImpact.treesEquivalent, unit: "شجرة" },
-];
-
 const Landing = () => {
   const navigate = useNavigate();
+  const [ecoImpact, setEcoImpact] = useState<EcoStats>({
+    co2Saved: 0,
+    waterSaved: 0,
+    plasticSaved: 0,
+    energySaved: 0,
+    treesEquivalent: 0,
+  });
+  const [topSchools, setTopSchools] = useState<SchoolLeaderboardItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPublicData = async () => {
+      try {
+        const res = await dashboardApi.getPublic();
+        if (res.data?.ecoImpact) {
+          setEcoImpact(res.data.ecoImpact);
+        }
+        if (res.data?.topSchools) {
+          setTopSchools(res.data.topSchools);
+        }
+      } catch (error) {
+        console.error("Failed to fetch public dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPublicData();
+  }, []);
+
+  const ecoImpactItems = [
+    { icon: "🌿", label: "CO₂ الموفر", value: ecoImpact.co2Saved, unit: "كجم" },
+    { icon: "💧", label: "الماء الموفر", value: ecoImpact.waterSaved, unit: "لتر" },
+    { icon: "♻️", label: "البلاستيك الموفر", value: ecoImpact.plasticSaved, unit: "كجم" },
+    { icon: "⚡", label: "الطاقة الموفرة", value: ecoImpact.energySaved, unit: "كيلوواط" },
+    { icon: "🌳", label: "ما يعادل", value: ecoImpact.treesEquivalent, unit: "شجرة" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,29 +119,39 @@ const Landing = () => {
       <section className="px-4 pb-12 md:px-8">
         <div className="mx-auto max-w-lg">
           <h2 className="mb-4 text-xl font-bold text-foreground text-center">🏆 أفضل المدارس هذا الأسبوع</h2>
-          <Card>
-            <CardContent className="p-0">
-              {topSchools.map((school, i) => (
-                <div
-                  key={school.rank}
-                  className={`flex items-center justify-between px-4 py-3 ${
-                    i < topSchools.length - 1 ? "border-b" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-muted-foreground w-6 text-center">
-                      {school.medal || school.rank}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-foreground">{school.name}</p>
-                      <p className="text-xs text-muted-foreground">{school.city}</p>
+          {isLoading ? (
+            <p className="text-center text-muted-foreground">جاري التحميل...</p>
+          ) : topSchools.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                لا توجد بيانات متاحة
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                {topSchools.map((school, i) => (
+                  <div
+                    key={school.rank}
+                    className={`flex items-center justify-between px-4 py-3 ${
+                      i < topSchools.length - 1 ? "border-b" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold text-muted-foreground w-6 text-center">
+                        {school.medal || school.rank}
+                      </span>
+                      <div>
+                        <p className="font-semibold text-foreground">{school.name}</p>
+                        <p className="text-xs text-muted-foreground">{school.city}</p>
+                      </div>
                     </div>
+                    <span className="font-bold text-primary">{school.points.toLocaleString()} نقطة</span>
                   </div>
-                  <span className="font-bold text-primary">{school.points.toLocaleString()} نقطة</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
 

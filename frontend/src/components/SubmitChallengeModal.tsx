@@ -2,6 +2,9 @@ import { useState, useRef } from "react";
 import { Camera, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { userChallengesApi } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import type { Challenge, EcoStats } from "@/lib/api";
 
 interface SubmitChallengeModalProps {
@@ -30,34 +33,60 @@ const formatImpact = (impact: EcoStats | undefined) => {
 
 const SubmitChallengeModal = ({ open, onClose, challenge }: SubmitChallengeModalProps) => {
   const [image, setImage] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [encouragingPhrase, setEncouragingPhrase] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { refreshUser } = useAuth();
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
       const reader = new FileReader();
       reader.onloadend = () => setImage(reader.result as string);
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
     }
   };
 
-  const handleSubmit = () => {
-    // TODO: Replace with actual API call
-    // const formData = new FormData();
-    // formData.append("photo", file);
-    // formData.append("challenge_id", challenge._id);
-    // const res = await userChallengesApi.submit(challenge._id, file);
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!file) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await userChallengesApi.submit(challenge._id, file);
+      if (res.data?.encouragingPhrase) {
+        setEncouragingPhrase(res.data.encouragingPhrase);
+      } else {
+        // Fallback to random phrase
+        setEncouragingPhrase(encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)]);
+      }
+      setSubmitted(true);
+      
+      // Refresh user data to get updated points
+      await refreshUser();
+    } catch (error) {
+      toast({
+        title: "❌ خطأ",
+        description: error instanceof Error ? error.message : "فشل إرسال المهمة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     setImage(null);
+    setFile(null);
     setSubmitted(false);
+    setEncouragingPhrase("");
     onClose();
   };
 
-  const randomPhrase = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+  const displayPhrase = encouragingPhrase || encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
   const impactItems = formatImpact(challenge.ecoImpact);
 
   return (
@@ -107,10 +136,10 @@ const SubmitChallengeModal = ({ open, onClose, challenge }: SubmitChallengeModal
               )}
 
               <div className="flex gap-2">
-                <Button onClick={handleSubmit} disabled={!image} className="flex-1">
-                  ✅ إرسال المهمة
+                <Button onClick={handleSubmit} disabled={!image || isSubmitting} className="flex-1">
+                  {isSubmitting ? "جاري الإرسال..." : "✅ إرسال المهمة"}
                 </Button>
-                <Button variant="outline" onClick={handleClose} className="flex-1">
+                <Button variant="outline" onClick={handleClose} className="flex-1" disabled={isSubmitting}>
                   إلغاء
                 </Button>
               </div>
@@ -120,7 +149,7 @@ const SubmitChallengeModal = ({ open, onClose, challenge }: SubmitChallengeModal
           <div className="flex flex-col items-center gap-4 py-4 text-center">
             <span className="text-6xl">🎉</span>
             <h3 className="text-xl font-bold text-foreground">أحسنت! 🎉</h3>
-            <p className="text-muted-foreground">{randomPhrase}</p>
+            <p className="text-muted-foreground">{displayPhrase}</p>
             <span className="text-2xl font-bold text-primary animate-bounce">+{challenge.points} نقطة</span>
 
             {impactItems.length > 0 && (

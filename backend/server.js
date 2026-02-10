@@ -19,7 +19,7 @@ const DB = process.env.DB.replace(
 
 mongoose.connect(DB).then((con) => console.log("DB Connected!"));
 
-const server = app.listen(3000, () => {
+const server = app.listen(5000, () => {
   console.log("Started listening...");
 });
 

@@ -91,6 +91,9 @@ export const userChallengesApi = {
   getMySubmissions: () =>
     request<{ userChallenges: UserChallenge[] }>("/user-challenges"),
 
+  getAllForReview: () =>
+    request<{ userChallenges: UserChallenge[] }>("/user-challenges"),
+
   review: (id: string, status: "approved" | "rejected") =>
     request<{ userChallenge: UserChallenge }>(`/user-challenges/${id}`, {
       method: "PATCH",

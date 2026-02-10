@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AppHeader from "@/components/layout/AppHeader";
 import BottomNav from "@/components/layout/BottomNav";
 import SubmitChallengeModal from "@/components/SubmitChallengeModal";
-import { challenges } from "@/data/mockData";
+import { challengesApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Challenge } from "@/lib/api";
 
@@ -68,14 +68,39 @@ const Challenges = () => {
   const { user } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [soloChallenges, setSoloChallenges] = useState<Challenge[]>([]);
+  const [schoolChallenges, setSchoolChallenges] = useState<Challenge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        setIsLoading(true);
+        const [soloRes, schoolRes] = await Promise.all([
+          challengesApi.getAvailable("solo"),
+          challengesApi.getAvailable("school_task"),
+        ]);
+        
+        if (soloRes.data?.challenges) {
+          setSoloChallenges(soloRes.data.challenges);
+        }
+        if (schoolRes.data?.challenges) {
+          setSchoolChallenges(schoolRes.data.challenges);
+        }
+      } catch (error) {
+        console.error("Failed to fetch challenges:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, []);
 
   const openModal = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setModalOpen(true);
   };
-
-  const soloChallenges = challenges.filter((c) => c.challengeType === "solo");
-  const schoolChallenges = challenges.filter((c) => c.challengeType === "school_task");
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -108,11 +133,19 @@ const Challenges = () => {
           </TabsList>
 
           <TabsContent value="solo" className="mt-4">
-            <ChallengeList items={soloChallenges} onSelect={openModal} />
+            {isLoading ? (
+              <p className="text-center text-muted-foreground">جاري التحميل...</p>
+            ) : (
+              <ChallengeList items={soloChallenges} onSelect={openModal} />
+            )}
           </TabsContent>
 
           <TabsContent value="school_task" className="mt-4">
-            <ChallengeList items={schoolChallenges} onSelect={openModal} />
+            {isLoading ? (
+              <p className="text-center text-muted-foreground">جاري التحميل...</p>
+            ) : (
+              <ChallengeList items={schoolChallenges} onSelect={openModal} />
+            )}
           </TabsContent>
         </Tabs>
       </div>

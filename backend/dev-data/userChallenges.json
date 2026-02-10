@@ -11,7 +11,7 @@
     "user_id": "60a402c3f5d4e1a2b3c4d002",
     "challenge_id": "60a2b5c3f5d4e1a2b3c4d5e2",
     "proof_url": "https://example.com/proofs/recycle-plastic-1.jpg",
-    "status": "processing"
+    "status": "pending"
   },
   {
     "_id": "60a5b5c3f5d4e1a2b3c4d5e3",
@@ -39,7 +39,7 @@
     "user_id": "60a406c3f5d4e1a2b3c4d006",
     "challenge_id": "60a2b5c3f5d4e1a2b3c4d5e6",
     "proof_url": "https://example.com/proofs/beach-cleanup-1.jpg",
-    "status": "processing"
+    "status": "pending"
   },
   {
     "_id": "60a5b5c3f5d4e1a2b3c4d5e7",
@@ -60,7 +60,7 @@
     "user_id": "60a409c3f5d4e1a2b3c4d009",
     "challenge_id": "60a2b5c3f5d4e1a2b3c4d5e9",
     "proof_url": "https://example.com/proofs/solar-power-1.jpg",
-    "status": "processing"
+    "status": "pending"
   },
   {
     "_id": "60a5b5c3f5d4e1a2b3c4d5ea",

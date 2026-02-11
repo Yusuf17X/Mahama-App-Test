@@ -63,10 +63,11 @@ export const userSubmissions: UserChallenge[] = [
 ];
 
 export const pendingReviewSubmissions: UserChallenge[] = [
-  { _id: "r1", challengeId: "3", challengeTitle: "امشِ إلى المدرسة", challengeEmoji: "🚶", status: "pending", studentName: "أحمد حسين", schoolName: "إعدادية المنصور", createdAt: "2026-02-10T07:30:00Z", photo: "/placeholder.svg" },
-  { _id: "r2", challengeId: "4", challengeTitle: "اجمع 5 قناني بلاستيكية", challengeEmoji: "🧴", status: "pending", studentName: "فاطمة أحمد", schoolName: "إعدادية المنصور", createdAt: "2026-02-10T06:00:00Z", photo: "/placeholder.svg" },
-  { _id: "r3", challengeId: "6", challengeTitle: "افرز 3 أنواع من النفايات", challengeEmoji: "🗑", status: "pending", studentName: "علي محمد", schoolName: "إعدادية المنصور", createdAt: "2026-02-09T14:00:00Z", photo: "/placeholder.svg" },
+  { _id: "r1", challengeId: "3", challengeTitle: "امشِ إلى المدرسة", challengeEmoji: "🚶", status: "pending", studentName: "أحمد حسين", schoolName: "إعدادية المنصور", createdAt: "2026-02-10T07:30:00Z", photo: "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=400" },
+  { _id: "r2", challengeId: "4", challengeTitle: "اجمع 5 قناني بلاستيكية", challengeEmoji: "🧴", status: "pending", studentName: "فاطمة أحمد", schoolName: "إعدادية المنصور", createdAt: "2026-02-10T06:00:00Z", photo: "http://example.com/photos/recycling.jpg" },
+  { _id: "r3", challengeId: "6", challengeTitle: "افرز 3 أنواع من النفايات", challengeEmoji: "🗑", status: "pending", studentName: "علي محمد", schoolName: "إعدادية المنصور", createdAt: "2026-02-09T14:00:00Z", photo: "/user-challenges/img/uploaded-image.jpg" },
   { _id: "r4", challengeId: "1", challengeTitle: "استخدم قنينة ماء من البيت", challengeEmoji: "🚰", status: "approved", studentName: "زينب كاظم", schoolName: "إعدادية المنصور", createdAt: "2026-02-09T09:00:00Z", photo: "/placeholder.svg" },
+  { _id: "r5", challengeId: "5", challengeTitle: "ازرع نبتة", challengeEmoji: "🌱", status: "pending", studentName: "محمد عباس", schoolName: "إعدادية المنصور", createdAt: "2026-02-09T08:00:00Z", photo: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=400" },
 ];
 
 export const schoolEcoStats = {

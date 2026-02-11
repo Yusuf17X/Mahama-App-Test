@@ -64,7 +64,9 @@ const Profile = () => {
   const schoolCity = user.schoolCity ?? "";
   const joinDate = user.joinDate ?? "";
   
-  const levelProgress = (user.points / (user.points + pointsToNextLevel)) * 100;
+  // Calculate level progress, avoiding division by zero
+  const totalPointsForProgress = user.points + pointsToNextLevel;
+  const levelProgress = totalPointsForProgress > 0 ? (user.points / totalPointsForProgress) * 100 : 0;
   const badges = user.badges || [];
   const activity = user.recentActivity || [];
   const ecoImpact = user.ecoImpact;
@@ -86,7 +88,7 @@ const Profile = () => {
               {user.name.charAt(0)}
             </div>
             <h2 className="mt-3 text-xl font-bold text-foreground">{user.name}</h2>
-            <p className="text-sm text-muted-foreground">{schoolName}{schoolCity && ` - ${schoolCity}`}</p>
+            {schoolName && <p className="text-sm text-muted-foreground">{schoolName}{schoolCity && ` - ${schoolCity}`}</p>}
             {joinDate && <p className="text-xs text-muted-foreground mt-1">عضو منذ {joinDate}</p>}
           </CardContent>
         </Card>

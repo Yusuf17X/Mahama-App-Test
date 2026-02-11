@@ -9,6 +9,9 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const { generateEncouragingPhrase } = require("../utils/ecoImpact");
 
+// Constants
+const USER_CHALLENGES_IMG_PATH = "/user-challenges/img/";
+
 // Multer configuration for disk storage
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -117,7 +120,7 @@ exports.getAllUserChallenges = catchAsync(async (req, res, next) => {
     challengeTitle: uc.challenge_id?.name,
     challengeEmoji: uc.challenge_id?.icon,
     status: uc.status,
-    photo: uc.proof_url ? `/user-challenges/img/${uc.proof_url}` : null,
+    photo: uc.proof_url ? `${USER_CHALLENGES_IMG_PATH}${uc.proof_url}` : null,
     studentName: uc.user_id?.name,
     schoolName: uc.user_id?.school_id?.name,
     createdAt: uc.createdAt,

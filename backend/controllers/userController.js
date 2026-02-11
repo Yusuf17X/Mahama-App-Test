@@ -2,11 +2,21 @@ const multer = require("multer");
 const sharp = require("sharp");
 const catchAsync = require("./../utils/catchAsync");
 const User = require("./../models/userModel");
+const Challenge = require("./../models/challengeModel");
 const AppError = require("./../utils/appError");
 const factory = require("./handlerFactory");
 
 const userChallenge = require("./../models/userChallengeModel");
 const userBadge = require("./../models/userBadgeModel");
+
+// Helper function to get teacher's advised challenge IDs
+const getTeacherChallengeIds = async (teacherId) => {
+  const teacherChallenges = await Challenge.find({ 
+    teacher_id: teacherId,
+    challenge_type: "school_task"
+  }).select("_id");
+  return teacherChallenges.map(c => c._id);
+};
 
 // const multerStorage = multer.diskStorage({
 //   destination: (req, file, cb) => {
@@ -135,12 +145,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   let completedChallenges = 0;
   if (user.role === "teacher") {
     // Teachers: count school_task challenges they advise that have been approved
-    const Challenge = require("./../models/challengeModel");
-    const teacherChallenges = await Challenge.find({ 
-      teacher_id: user._id,
-      challenge_type: "school_task"
-    }).select("_id");
-    const challengeIds = teacherChallenges.map(c => c._id);
+    const challengeIds = await getTeacherChallengeIds(user._id);
     completedChallenges = await userChallenge.countDocuments({
       challenge_id: { $in: challengeIds },
       status: "approved",
@@ -184,12 +189,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   let approvedUserChallenges;
   if (user.role === "teacher") {
     // Teachers: get all approved challenges for school tasks they advise
-    const Challenge = require("./../models/challengeModel");
-    const teacherChallenges = await Challenge.find({ 
-      teacher_id: user._id,
-      challenge_type: "school_task"
-    }).select("_id");
-    const challengeIds = teacherChallenges.map(c => c._id);
+    const challengeIds = await getTeacherChallengeIds(user._id);
     approvedUserChallenges = await userChallenge
       .find({ 
         challenge_id: { $in: challengeIds },
@@ -209,12 +209,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   let userChallenges;
   if (user.role === "teacher") {
     // Teachers: get challenges they've advised that were approved
-    const Challenge = require("./../models/challengeModel");
-    const teacherChallenges = await Challenge.find({ 
-      teacher_id: user._id,
-      challenge_type: "school_task"
-    }).select("_id");
-    const challengeIds = teacherChallenges.map(c => c._id);
+    const challengeIds = await getTeacherChallengeIds(user._id);
     userChallenges = await userChallenge
       .find({ 
         challenge_id: { $in: challengeIds },

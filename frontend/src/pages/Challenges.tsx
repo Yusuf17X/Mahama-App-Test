@@ -83,6 +83,9 @@ const Challenges = () => {
 
   useEffect(() => {
     const fetchChallenges = async () => {
+      // Don't fetch if user will be redirected
+      if (isTeacherOrAdmin) return;
+      
       try {
         setIsLoading(true);
         const [soloRes, schoolRes] = await Promise.all([
@@ -104,7 +107,7 @@ const Challenges = () => {
     };
 
     fetchChallenges();
-  }, []);
+  }, [isTeacherOrAdmin]);
 
   const openModal = (challenge: Challenge) => {
     setSelectedChallenge(challenge);

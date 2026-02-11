@@ -49,6 +49,7 @@ const challengeSchema = new mongoose.Schema(
     teacher_id: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
+      // Required for school_task challenges - references challenge_type field
       required: function() {
         return this.challenge_type === "school_task";
       },

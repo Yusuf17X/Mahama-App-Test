@@ -91,7 +91,7 @@ const Landing = () => {
               {ecoImpactItems.map((item) => (
                 <div key={item.label} className="text-center">
                   <span className="text-2xl">{item.icon}</span>
-                  <p className="text-2xl font-extrabold mt-1">{item.value.toLocaleString()}</p>
+                  <p className="text-2xl font-extrabold mt-1">{(item.value || 0).toLocaleString()}</p>
                   <p className="text-xs opacity-80">{item.unit} {item.label}</p>
                 </div>
               ))}
@@ -146,7 +146,7 @@ const Landing = () => {
                         <p className="text-xs text-muted-foreground">{school.city}</p>
                       </div>
                     </div>
-                    <span className="font-bold text-primary">{school.points.toLocaleString()} نقطة</span>
+                    <span className="font-bold text-primary">{(school.points || 0).toLocaleString()} نقطة</span>
                   </div>
                 ))}
               </CardContent>

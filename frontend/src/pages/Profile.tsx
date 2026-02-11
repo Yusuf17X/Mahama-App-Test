@@ -54,10 +54,27 @@ const Profile = () => {
 
   if (!user) return null;
 
-  const levelProgress = (user.points / (user.points + user.pointsToNextLevel)) * 100;
+  // Provide default values for fields that might be undefined (e.g., new users)
+  const level = user.level ?? 1;
+  const levelName = user.levelName ?? "مبتدئ";
+  const challengesCompleted = user.challengesCompleted ?? 0;
+  const streak = user.streak ?? 0;
+  const pointsToNextLevel = user.pointsToNextLevel ?? 50;
+  const schoolName = user.schoolName ?? "";
+  const schoolCity = user.schoolCity ?? "";
+  const joinDate = user.joinDate ?? "";
+  
+  // Calculate level progress, avoiding division by zero
+  const totalPointsForProgress = user.points + pointsToNextLevel;
+  const levelProgress = totalPointsForProgress > 0 ? (user.points / totalPointsForProgress) * 100 : 0;
   const badges = user.badges || [];
   const activity = user.recentActivity || [];
   const ecoImpact = user.ecoImpact;
+
+  // Format school location display
+  const schoolLocation = schoolName 
+    ? `${schoolName}${schoolCity ? ` - ${schoolCity}` : ""}`
+    : "";
 
   const handleLogout = () => {
     logout();
@@ -76,8 +93,8 @@ const Profile = () => {
               {user.name.charAt(0)}
             </div>
             <h2 className="mt-3 text-xl font-bold text-foreground">{user.name}</h2>
-            <p className="text-sm text-muted-foreground">{user.schoolName} - {user.schoolCity}</p>
-            <p className="text-xs text-muted-foreground mt-1">عضو منذ {user.joinDate}</p>
+            {schoolLocation && <p className="text-sm text-muted-foreground">{schoolLocation}</p>}
+            {joinDate && <p className="text-xs text-muted-foreground mt-1">عضو منذ {joinDate}</p>}
           </CardContent>
         </Card>
 
@@ -85,9 +102,9 @@ const Profile = () => {
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon: "🏆", label: "النقاط", value: user.points },
-            { icon: "📈", label: "المستوى", value: `${user.level} - ${user.levelName}` },
-            { icon: "✅", label: "المهام", value: `${user.challengesCompleted} مكتمل` },
-            { icon: "🔥", label: "أطول سلسلة", value: `${user.streak} أيام` },
+            { icon: "📈", label: "المستوى", value: `${level} - ${levelName}` },
+            { icon: "✅", label: "المهام", value: `${challengesCompleted} مكتمل` },
+            { icon: "🔥", label: "أطول سلسلة", value: `${streak} أيام` },
           ].map((stat) => (
             <Card key={stat.label}>
               <CardContent className="py-4 text-center">
@@ -101,9 +118,9 @@ const Profile = () => {
         {/* Level Progress */}
         <Card>
           <CardContent className="py-4 space-y-2">
-            <p className="text-sm font-semibold text-foreground">المستوى {user.level}: {user.levelName}</p>
+            <p className="text-sm font-semibold text-foreground">المستوى {level}: {levelName}</p>
             <Progress value={levelProgress} className="h-3" />
-            <p className="text-xs text-muted-foreground">{user.pointsToNextLevel} نقطة للمستوى التالي</p>
+            <p className="text-xs text-muted-foreground">{pointsToNextLevel} نقطة للمستوى التالي</p>
           </CardContent>
         </Card>
 

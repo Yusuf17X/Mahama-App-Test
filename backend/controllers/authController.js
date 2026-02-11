@@ -29,14 +29,16 @@ const createSendToken = (user, statusCode, res) => {
   user.password = undefined;
 
   // Format user object with schoolName and schoolCity if school_id is populated
+  // Handle both populated and unpopulated school_id cases
+  const isSchoolPopulated = user.school_id && typeof user.school_id === 'object' && user.school_id.name;
   const userResponse = {
     _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
-    school_id: user.school_id?._id || user.school_id,
-    schoolName: user.school_id?.name || "",
-    schoolCity: user.school_id?.city || "",
+    school_id: isSchoolPopulated ? user.school_id._id : (user.school_id || ""),
+    schoolName: isSchoolPopulated ? user.school_id.name : "",
+    schoolCity: isSchoolPopulated ? user.school_id.city : "",
     points: user.points,
   };
 

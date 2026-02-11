@@ -114,9 +114,9 @@ exports.getAllUserChallenges = catchAsync(async (req, res, next) => {
     .sort({ createdAt: -1 });
 
   // Build absolute URL for images
-  const protocol = req.protocol;
-  const host = req.get("host");
-  const baseUrl = `${protocol}://${host}`;
+  // Use environment variable if available, otherwise construct from request headers
+  // When behind proxy, ensure express app has trust proxy enabled
+  const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
 
   // Transform response to match frontend interface
   const transformedChallenges = userChallenges.map(uc => ({

@@ -36,7 +36,7 @@ const createSendToken = (user, statusCode, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    school_id: isSchoolPopulated ? user.school_id._id : (user.school_id || ""),
+    school_id: isSchoolPopulated ? user.school_id._id.toString() : (user.school_id ? user.school_id.toString() : ""),
     schoolName: isSchoolPopulated ? user.school_id.name : "",
     schoolCity: isSchoolPopulated ? user.school_id.city : "",
     points: user.points,

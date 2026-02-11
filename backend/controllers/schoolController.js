@@ -5,6 +5,7 @@ const School = require("../models/schoolModel");
 const User = require("../models/userModel");
 const UserChallenge = require("../models/userChallengeModel");
 const { calculateTotalImpact } = require("../utils/ecoImpact");
+const APIFeatures = require("../utils/apiFeatures");
 
 exports.aliasTopSchools = (req, res, next) => {
   req.queryOverrides = {
@@ -20,7 +21,13 @@ exports.aliasTopSchools = (req, res, next) => {
 exports.getAllSchools = catchAsync(async (req, res, next) => {
   const querySource = req.queryOverrides || req.query;
 
-  const schools = await School.find();
+  const features = new APIFeatures(School.find(), querySource)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+
+  const schools = await features.query;
 
   res.status(200).json({
     status: "success",

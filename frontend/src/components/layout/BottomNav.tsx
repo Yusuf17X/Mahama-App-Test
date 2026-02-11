@@ -7,7 +7,7 @@ const BottomNav = () => {
   const { isTeacherOrAdmin } = useAuth();
 
   const navItems = [
-    { path: "/challenges", icon: "🏠", label: "الرئيسية" },
+    ...(!isTeacherOrAdmin ? [{ path: "/challenges", icon: "🏠", label: "الرئيسية" }] : []),
     { path: "/leaderboard", icon: "🏆", label: "المتصدرون" },
     { path: "/school-stats", icon: "🏫", label: "المدرسة" },
     { path: "/profile", icon: "👤", label: "حسابي" },

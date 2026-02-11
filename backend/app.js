@@ -64,6 +64,9 @@ app.use(
 
 app.use(compression());
 
+// Serve static files from public directory
+app.use(express.static("public"));
+
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/schools", schoolRouter);
 app.use("/api/v1/badges", badgeRouter);

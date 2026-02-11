@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,12 +66,20 @@ const ChallengeList = ({
 };
 
 const Challenges = () => {
-  const { user } = useAuth();
+  const { user, isTeacherOrAdmin } = useAuth();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [soloChallenges, setSoloChallenges] = useState<Challenge[]>([]);
   const [schoolChallenges, setSchoolChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Redirect teachers and admins to Review page
+  useEffect(() => {
+    if (isTeacherOrAdmin) {
+      navigate("/review");
+    }
+  }, [isTeacherOrAdmin, navigate]);
 
   useEffect(() => {
     const fetchChallenges = async () => {

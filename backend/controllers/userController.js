@@ -131,11 +131,27 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     };
   }
 
-  // Get completed challenges count
-  const completedChallenges = await userChallenge.countDocuments({
-    user_id: req.user._id,
-    status: "approved",
-  });
+  // Get completed challenges count based on role
+  let completedChallenges = 0;
+  if (user.role === "teacher") {
+    // Teachers: count school_task challenges they advise that have been approved
+    const Challenge = require("./../models/challengeModel");
+    const teacherChallenges = await Challenge.find({ 
+      teacher_id: user._id,
+      challenge_type: "school_task"
+    }).select("_id");
+    const challengeIds = teacherChallenges.map(c => c._id);
+    completedChallenges = await userChallenge.countDocuments({
+      challenge_id: { $in: challengeIds },
+      status: "approved",
+    });
+  } else {
+    // Regular users and admins: count their own approved challenges
+    completedChallenges = await userChallenge.countDocuments({
+      user_id: req.user._id,
+      status: "approved",
+    });
+  }
 
   // Calculate streak
   let streak = 0;
@@ -164,20 +180,60 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     earned: earnedBadgeIds.includes(badge._id.toString()),
   }));
 
-  // Get user's approved challenges to calculate eco impact
-  const approvedUserChallenges = await userChallenge
-    .find({ user_id: req.user._id, status: "approved" })
-    .populate("challenge_id");
+  // Get user's approved challenges to calculate eco impact based on role
+  let approvedUserChallenges;
+  if (user.role === "teacher") {
+    // Teachers: get all approved challenges for school tasks they advise
+    const Challenge = require("./../models/challengeModel");
+    const teacherChallenges = await Challenge.find({ 
+      teacher_id: user._id,
+      challenge_type: "school_task"
+    }).select("_id");
+    const challengeIds = teacherChallenges.map(c => c._id);
+    approvedUserChallenges = await userChallenge
+      .find({ 
+        challenge_id: { $in: challengeIds },
+        status: "approved" 
+      })
+      .populate("challenge_id");
+  } else {
+    // Regular users and admins: get their own approved challenges
+    approvedUserChallenges = await userChallenge
+      .find({ user_id: req.user._id, status: "approved" })
+      .populate("challenge_id");
+  }
 
   const totalImpact = calculateTotalImpact(approvedUserChallenges);
 
-  // Get last 5 activities (merge UserChallenges and UserBadges)
-  const userChallenges = await userChallenge
-    .find({ user_id: req.user._id, status: "approved" })
-    .populate("challenge_id", "name points")
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean();
+  // Get last 5 activities (merge UserChallenges and UserBadges) based on role
+  let userChallenges;
+  if (user.role === "teacher") {
+    // Teachers: get challenges they've advised that were approved
+    const Challenge = require("./../models/challengeModel");
+    const teacherChallenges = await Challenge.find({ 
+      teacher_id: user._id,
+      challenge_type: "school_task"
+    }).select("_id");
+    const challengeIds = teacherChallenges.map(c => c._id);
+    userChallenges = await userChallenge
+      .find({ 
+        challenge_id: { $in: challengeIds },
+        status: "approved" 
+      })
+      .populate("challenge_id", "name points")
+      .populate("user_id", "name")
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+  } else {
+    // Regular users and admins: get their own challenges
+    userChallenges = await userChallenge
+      .find({ user_id: req.user._id, status: "approved" })
+      .populate("challenge_id", "name points")
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+  }
 
   const userBadgesActivities = await userBadge
     .find({ user_id: req.user._id })
@@ -187,14 +243,20 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     .lean();
 
   const activities = [
-    ...userChallenges.map((uc) => ({
-      _id: uc._id.toString(),
-      type: "challenge",
-      text: `أكملت مهمة: ${uc.challenge_id?.name || "Unknown Challenge"}`,
-      icon: "✅",
-      points: uc.challenge_id?.points || 0,
-      date: uc.createdAt,
-    })),
+    ...userChallenges.map((uc) => {
+      // For teachers, show student name who completed the task
+      const activityText = user.role === "teacher" 
+        ? `تمت الموافقة على: ${uc.challenge_id?.name || "Unknown Challenge"} من ${uc.user_id?.name || "طالب"}`
+        : `أكملت مهمة: ${uc.challenge_id?.name || "Unknown Challenge"}`;
+      return {
+        _id: uc._id.toString(),
+        type: "challenge",
+        text: activityText,
+        icon: "✅",
+        points: uc.challenge_id?.points || 0,
+        date: uc.createdAt,
+      };
+    }),
     ...userBadgesActivities.map((ub) => ({
       _id: ub._id.toString(),
       type: "badge",

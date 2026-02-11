@@ -67,6 +67,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     formatMemberSince,
     MS_PER_DAY,
   } = require("./../utils/translations");
+  const { calculateTotalImpact } = require("./../utils/ecoImpact");
 
   // Get user with populated school
   const user = await User.findById(req.user._id).populate(
@@ -157,53 +158,82 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   const earnedBadgeIds = userBadgesData.map((ub) => ub.badge_id.toString());
 
   const badges = allBadges.map((badge) => ({
+    _id: badge._id.toString(),
     name: badge.name,
-    icon: badge.icon,
-    isEarned: earnedBadgeIds.includes(badge._id.toString()),
+    emoji: badge.icon,
+    earned: earnedBadgeIds.includes(badge._id.toString()),
   }));
+
+  // Get user's approved challenges to calculate eco impact
+  const approvedUserChallenges = await userChallenge
+    .find({ user_id: req.user._id, status: "approved" })
+    .populate("challenge_id");
+
+  const totalImpact = calculateTotalImpact(approvedUserChallenges);
 
   // Get last 5 activities (merge UserChallenges and UserBadges)
   const userChallenges = await userChallenge
-    .find({ user_id: req.user._id })
-    .populate("challenge_id", "name")
+    .find({ user_id: req.user._id, status: "approved" })
+    .populate("challenge_id", "name points")
     .sort({ createdAt: -1 })
     .limit(5);
 
   const userBadgesActivities = await userBadge
     .find({ user_id: req.user._id })
-    .populate("badge_id", "name")
+    .populate("badge_id", "name icon")
     .sort({ createdAt: -1 })
     .limit(5);
 
   const activities = [
     ...userChallenges.map((uc) => ({
+      _id: uc._id.toString(),
       type: "challenge",
-      name: uc.challenge_id?.name || "Unknown Challenge",
-      date: uc.createdAt,
+      text: `أكملت مهمة: ${uc.challenge_id?.name || "Unknown Challenge"}`,
+      icon: "✅",
+      points: uc.challenge_id?.points || 0,
+      time: formatMemberSince(uc.createdAt),
     })),
     ...userBadgesActivities.map((ub) => ({
+      _id: ub._id.toString(),
       type: "badge",
-      name: ub.badge_id?.name || "Unknown Badge",
-      date: ub.createdAt,
+      text: `حصلت على شارة: ${ub.badge_id?.name || "Unknown Badge"}`,
+      icon: ub.badge_id?.icon || "🎖",
+      points: 0,
+      time: formatMemberSince(ub.createdAt),
     })),
   ]
-    .sort((a, b) => b.date - a.date)
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
     .slice(0, 5);
 
+  // Return user object matching frontend interface
   res.status(200).json({
     status: "success",
     data: {
-      name: user.name,
-      school: user.school_id
-        ? { name: user.school_id.name, city: user.school_id.city }
-        : null,
-      points: user.points,
-      level,
-      completedChallengesCount: completedChallenges,
-      streak,
-      memberSince: memberSinceFormatted,
-      badges,
-      lastActivities: activities,
+      user: {
+        _id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role || "student",
+        school_id: user.school_id?._id?.toString() || "",
+        schoolName: user.school_id?.name || "",
+        schoolCity: user.school_id?.city || "",
+        points: user.points,
+        level: level.current,
+        levelName: level.nameAr,
+        challengesCompleted: completedChallenges,
+        streak: streak,
+        pointsToNextLevel: level.pointsToNextLevel,
+        ecoImpact: {
+          co2Saved: Math.round(totalImpact.co2SavedKg * 100) / 100,
+          waterSaved: Math.round(totalImpact.waterSavedLiters * 100) / 100,
+          plasticSaved: Math.round(totalImpact.plasticSavedGrams / 1000 * 100) / 100, // Convert to kg
+          energySaved: Math.round(totalImpact.energySavedKwh * 100) / 100,
+          treesEquivalent: Math.round(totalImpact.treesEquivalent * 100) / 100,
+        },
+        badges: badges,
+        recentActivity: activities,
+        joinDate: memberSinceFormatted,
+      },
     },
   });
 });
@@ -274,6 +304,7 @@ exports.getSchoolLeaderboard = catchAsync(async (req, res, next) => {
   // Create leaderboard with ranks
   const leaderboard = top100Users.map((user, index) => ({
     rank: index + 1,
+    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
     name: user.name,
     points: user.points,
     school: user.school_id?.name || "",
@@ -305,7 +336,7 @@ exports.getSchoolLeaderboard = catchAsync(async (req, res, next) => {
     status: "success",
     results: leaderboard.length,
     data: {
-      leaderboard,
+      users: leaderboard,
     },
   });
 });
@@ -331,6 +362,7 @@ exports.getIraqLeaderboard = catchAsync(async (req, res, next) => {
   // Create leaderboard with ranks
   const leaderboard = top100Users.map((user, index) => ({
     rank: index + 1,
+    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
     name: user.name,
     points: user.points,
     school: user.school_id?.name || "",
@@ -361,7 +393,7 @@ exports.getIraqLeaderboard = catchAsync(async (req, res, next) => {
     status: "success",
     results: leaderboard.length,
     data: {
-      leaderboard,
+      users: leaderboard,
     },
   });
 });

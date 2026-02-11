@@ -65,7 +65,7 @@ export const schoolsApi = {
   getAll: () => request<{ schools: School[] }>("/schools"),
   getLeaderboard: () => request<{ schools: SchoolLeaderboardItem[] }>("/schools/leaderboard"),
   getEcoStats: (schoolId: string) =>
-    request<{ ecoStats: EcoStats; participation: SchoolParticipation }>(`/schools/${schoolId}/eco-stats`),
+    request<{ school: { id: string; name: string; city: string }; ecoImpact: any; participation: any }>(`/schools/${schoolId}/eco-stats`),
 };
 
 // ====== Challenges ======

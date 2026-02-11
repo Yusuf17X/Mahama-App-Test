@@ -17,7 +17,17 @@ exports.aliasTopSchools = (req, res, next) => {
   next();
 };
 
-exports.getAllSchools = factory.getAll(School);
+exports.getAllSchools = catchAsync(async (req, res, next) => {
+  const querySource = req.queryOverrides || req.query;
+
+  const schools = await School.find();
+
+  res.status(200).json({
+    status: "success",
+    results: schools.length,
+    data: { schools },
+  });
+});
 
 exports.createSchool = factory.createOne(School);
 

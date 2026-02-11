@@ -46,6 +46,14 @@ const challengeSchema = new mongoose.Schema(
       default: "one-time",
       required: [true, "A challenge must have a frequency!"],
     },
+    teacher_id: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      // Required for school_task challenges - references challenge_type field
+      required: function() {
+        return this.challenge_type === "school_task";
+      },
+    },
     ecoImpact: {
       category: {
         type: String,

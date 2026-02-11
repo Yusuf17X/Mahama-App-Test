@@ -54,7 +54,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a411c3f5d4e1a2b3c4d011"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5e5",
@@ -92,7 +93,8 @@
       "plasticSavedGrams": 500,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a412c3f5d4e1a2b3c4d012"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5e8",
@@ -130,7 +132,8 @@
       "plasticSavedGrams": 100,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a413c3f5d4e1a2b3c4d013"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5eb",
@@ -206,7 +209,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0.1
-    }
+    },
+    "teacher_id": "60a414c3f5d4e1a2b3c4d014"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5f1",
@@ -225,7 +229,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a415c3f5d4e1a2b3c4d015"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5f2",
@@ -282,7 +287,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a416c3f5d4e1a2b3c4d016"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5f6",
@@ -301,7 +307,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a417c3f5d4e1a2b3c4d017"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5f7",
@@ -320,7 +327,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 5,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a418c3f5d4e1a2b3c4d018"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5f9",
@@ -339,7 +347,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a419c3f5d4e1a2b3c4d019"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5fb",
@@ -358,7 +367,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a420c3f5d4e1a2b3c4d020"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d5fd",
@@ -396,7 +406,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a411c3f5d4e1a2b3c4d011"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d601",
@@ -434,7 +445,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 10,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a412c3f5d4e1a2b3c4d012"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d604",
@@ -453,7 +465,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 3,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a413c3f5d4e1a2b3c4d013"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d606",
@@ -491,7 +504,8 @@
       "plasticSavedGrams": 0,
       "energySavedKwh": 0,
       "treesEquivalent": 0
-    }
+    },
+    "teacher_id": "60a414c3f5d4e1a2b3c4d014"
   },
   {
     "_id": "60a2b5c3f5d4e1a2b3c4d608",

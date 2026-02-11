@@ -9,6 +9,9 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const { generateEncouragingPhrase } = require("../utils/ecoImpact");
 
+// Constants
+const USER_CHALLENGES_IMG_PATH = "/user-challenges/img/";
+
 // Multer configuration for disk storage
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -110,11 +113,24 @@ exports.getAllUserChallenges = catchAsync(async (req, res, next) => {
     })
     .sort({ createdAt: -1 });
 
+  // Transform response to match frontend interface
+  const transformedChallenges = userChallenges.map(uc => ({
+    _id: uc._id,
+    challengeId: uc.challenge_id?._id,
+    challengeTitle: uc.challenge_id?.name,
+    challengeEmoji: uc.challenge_id?.icon,
+    status: uc.status,
+    photo: uc.proof_url ? `${USER_CHALLENGES_IMG_PATH}${uc.proof_url}` : null,
+    studentName: uc.user_id?.name,
+    schoolName: uc.user_id?.school_id?.name,
+    createdAt: uc.createdAt,
+  }));
+
   res.status(200).json({
     status: "success",
-    results: userChallenges.length,
+    results: transformedChallenges.length,
     data: {
-      userChallenges,
+      userChallenges: transformedChallenges,
     },
   });
 });

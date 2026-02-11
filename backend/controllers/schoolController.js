@@ -89,13 +89,14 @@ exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
     },
   ]);
 
-  // Create leaderboard with ranks
+  // Create leaderboard with ranks and medals
   const leaderboard = top100Schools.map((school, index) => ({
     rank: index + 1,
+    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
     name: school.name,
     city: school.city,
-    totalPoints: school.totalPoints,
-    studentCount: school.studentCount,
+    points: school.totalPoints,
+    students: school.studentCount,
     isCurrentUserSchool:
       currentUser.school_id &&
       school._id.toString() === currentUser.school_id.toString(),
@@ -179,8 +180,8 @@ exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
         rank: actualRank,
         name: currentSchool.name,
         city: currentSchool.city,
-        totalPoints: currentSchool.totalPoints,
-        studentCount: currentSchool.studentCount,
+        points: currentSchool.totalPoints,
+        students: currentSchool.studentCount,
         isCurrentUserSchool: true,
       });
     }
@@ -190,7 +191,7 @@ exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
     status: "success",
     results: leaderboard.length,
     data: {
-      leaderboard,
+      schools: leaderboard,
     },
   });
 });

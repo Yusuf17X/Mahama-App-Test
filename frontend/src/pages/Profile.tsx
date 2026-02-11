@@ -71,6 +71,11 @@ const Profile = () => {
   const activity = user.recentActivity || [];
   const ecoImpact = user.ecoImpact;
 
+  // Format school location display
+  const schoolLocation = schoolName 
+    ? `${schoolName}${schoolCity ? ` - ${schoolCity}` : ""}`
+    : "";
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -88,7 +93,7 @@ const Profile = () => {
               {user.name.charAt(0)}
             </div>
             <h2 className="mt-3 text-xl font-bold text-foreground">{user.name}</h2>
-            {schoolName && <p className="text-sm text-muted-foreground">{schoolName}{schoolCity && ` - ${schoolCity}`}</p>}
+            {schoolLocation && <p className="text-sm text-muted-foreground">{schoolLocation}</p>}
             {joinDate && <p className="text-xs text-muted-foreground mt-1">عضو منذ {joinDate}</p>}
           </CardContent>
         </Card>

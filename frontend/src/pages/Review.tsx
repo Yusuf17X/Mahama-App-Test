@@ -8,6 +8,7 @@ import { userChallengesApi } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { UserChallenge } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/utils";
 
 const statusLabels: Record<string, { text: string; icon: string; color: string }> = {
   pending: { text: "قيد المراجعة", icon: "🟡", color: "text-yellow-600" },
@@ -34,6 +35,7 @@ const Review = () => {
   const { toast } = useToast();
   const [submissions, setSubmissions] = useState<UserChallenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -96,6 +98,10 @@ const Review = () => {
     }
   };
 
+  const handleImageError = (submissionId: string) => {
+    setImageErrors((prev) => new Set(prev).add(submissionId));
+  };
+
   const pendingCount = submissions.filter((s) => s.status === "pending").length;
 
   return (
@@ -139,11 +145,23 @@ const Review = () => {
                   </div>
 
                   {sub.photo && (
-                    <img
-                      src={sub.photo}
-                      alt="إثبات المهمة"
-                      className="w-full rounded-lg object-cover max-h-48 bg-muted"
-                    />
+                    <div className="relative">
+                      {imageErrors.has(sub._id) ? (
+                        <div className="w-full rounded-lg bg-muted flex items-center justify-center min-h-48 text-muted-foreground">
+                          <div className="text-center p-4">
+                            <span className="text-4xl block mb-2">🖼️</span>
+                            <span className="text-sm">لا يمكن تحميل الصورة</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={resolveImageUrl(sub.photo) || ""}
+                          alt="إثبات المهمة"
+                          className="w-full rounded-lg object-cover max-h-48 bg-muted"
+                          onError={() => handleImageError(sub._id)}
+                        />
+                      )}
+                    </div>
                   )}
 
                   {sub.status === "pending" && (

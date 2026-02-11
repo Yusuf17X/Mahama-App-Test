@@ -28,11 +28,23 @@ const createSendToken = (user, statusCode, res) => {
   // Remove password from the output
   user.password = undefined;
 
+  // Format user object with schoolName and schoolCity if school_id is populated
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    school_id: user.school_id?._id || user.school_id,
+    schoolName: user.school_id?.name || "",
+    schoolCity: user.school_id?.city || "",
+    points: user.points,
+  };
+
   res.status(statusCode).json({
     status: "success",
     token,
     data: {
-      user,
+      user: userResponse,
     },
   });
 };
@@ -46,6 +58,9 @@ exports.signup = catchAsync(async (req, res, next) => {
     school_id: req.body.school_id,
   });
 
+  // Populate school data for response
+  await newUser.populate("school_id", "name city");
+
   createSendToken(newUser, 201, res);
 });
 
@@ -55,7 +70,7 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Please provide email and password!", 400));
 
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email }).select("+password").populate("school_id", "name city");
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password!", 401));

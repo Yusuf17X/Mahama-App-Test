@@ -34,7 +34,10 @@ app.use(cors());
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: "Too many request. Please try again later!",
+  message: "Too many requests. Please try again later!",
+  // Skip trust proxy validation - acceptable for development/simple deployments
+  // For production behind proxies, configure app.set('trust proxy', <specific_proxy_config>)
+  validate: { trustProxy: false },
 });
 app.use("/api", limiter);
 

@@ -37,7 +37,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               localStorage.setItem("user", JSON.stringify(res.data.user));
             }
           } catch (error) {
-            console.error("Failed to refresh user data:", error);
+            // If JWT is malformed or invalid, clear auth state silently
+            if (error instanceof Error && error.message.includes("jwt")) {
+              setToken(null);
+              setUser(null);
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+            } else {
+              console.error("Failed to refresh user data:", error);
+            }
           }
         } catch {
           localStorage.removeItem("token");

@@ -44,8 +44,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               localStorage.setItem("user", JSON.stringify(res.data.user));
             }
           } catch (error) {
-            // If JWT is malformed or invalid, clear auth state silently
-            if (error instanceof Error && error.message.toLowerCase().includes("jwt")) {
+            // If JWT is malformed/invalid/expired, clear auth state silently
+            if (
+              error instanceof Error && 
+              (error.message.toLowerCase().includes("jwt") ||
+               error.message.toLowerCase().includes("token") ||
+               error.message.toLowerCase().includes("unauthorized"))
+            ) {
               clearAuthState();
             } else {
               console.error("Failed to refresh user data:", error);

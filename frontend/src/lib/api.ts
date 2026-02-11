@@ -65,7 +65,26 @@ export const schoolsApi = {
   getAll: () => request<{ schools: School[] }>("/schools"),
   getLeaderboard: () => request<{ schools: SchoolLeaderboardItem[] }>("/schools/leaderboard"),
   getEcoStats: (schoolId: string) =>
-    request<{ school: { id: string; name: string; city: string }; ecoImpact: any; participation: any }>(`/schools/${schoolId}/eco-stats`),
+    request<{ 
+      school: { id: string; name: string; city: string }; 
+      ecoImpact: {
+        co2SavedKg: number;
+        co2AbsorbedKgPerYear: number;
+        totalCo2Impact: number;
+        waterSavedLiters: number;
+        plasticSavedGrams: number;
+        plasticSavedKg: number;
+        energySavedKwh: number;
+        treesEquivalent: number;
+      };
+      participation: {
+        totalStudents: number;
+        activeStudents: number;
+        participationRate: string | number;
+        totalChallengesCompleted: number;
+        totalPoints: number;
+      };
+    }>(`/schools/${schoolId}/eco-stats`),
 };
 
 // ====== Challenges ======

@@ -72,7 +72,7 @@ exports.getPublicDashboard = catchAsync(async (req, res, next) => {
       ecoImpact: {
         co2Saved: Math.round(totalImpact.co2SavedKg * 100) / 100,
         waterSaved: Math.round(totalImpact.waterSavedLiters * 100) / 100,
-        plasticSaved: Math.round(totalImpact.plasticSavedGrams / 1000 * 100) / 100, // Convert grams to kg
+        plasticSaved: Math.round(totalImpact.plasticSavedGrams * 100 / 1000) / 100, // Convert grams to kg
         energySaved: Math.round(totalImpact.energySavedKwh * 100) / 100,
         treesEquivalent: Math.round(totalImpact.treesEquivalent * 100) / 100,
         totalChallengesCompleted: approvedChallenges.length,

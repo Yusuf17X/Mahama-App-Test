@@ -176,13 +176,15 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     .find({ user_id: req.user._id, status: "approved" })
     .populate("challenge_id", "name points")
     .sort({ createdAt: -1 })
-    .limit(5);
+    .limit(5)
+    .lean();
 
   const userBadgesActivities = await userBadge
     .find({ user_id: req.user._id })
     .populate("badge_id", "name icon")
     .sort({ createdAt: -1 })
-    .limit(5);
+    .limit(5)
+    .lean();
 
   const activities = [
     ...userChallenges.map((uc) => ({
@@ -191,7 +193,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
       text: `أكملت مهمة: ${uc.challenge_id?.name || "Unknown Challenge"}`,
       icon: "✅",
       points: uc.challenge_id?.points || 0,
-      time: formatMemberSince(uc.createdAt),
+      date: uc.createdAt,
     })),
     ...userBadgesActivities.map((ub) => ({
       _id: ub._id.toString(),
@@ -199,11 +201,19 @@ exports.getProfile = catchAsync(async (req, res, next) => {
       text: `حصلت على شارة: ${ub.badge_id?.name || "Unknown Badge"}`,
       icon: ub.badge_id?.icon || "🎖",
       points: 0,
-      time: formatMemberSince(ub.createdAt),
+      date: ub.createdAt,
     })),
   ]
-    .sort((a, b) => new Date(b.time) - new Date(a.time))
-    .slice(0, 5);
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map((activity) => ({
+      _id: activity._id,
+      type: activity.type,
+      text: activity.text,
+      icon: activity.icon,
+      points: activity.points,
+      time: formatMemberSince(activity.date),
+    }));
 
   // Return user object matching frontend interface
   res.status(200).json({
@@ -226,7 +236,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
         ecoImpact: {
           co2Saved: Math.round(totalImpact.co2SavedKg * 100) / 100,
           waterSaved: Math.round(totalImpact.waterSavedLiters * 100) / 100,
-          plasticSaved: Math.round(totalImpact.plasticSavedGrams / 1000 * 100) / 100, // Convert to kg
+          plasticSaved: Math.round(totalImpact.plasticSavedGrams * 100 / 1000) / 100, // Convert to kg
           energySaved: Math.round(totalImpact.energySavedKwh * 100) / 100,
           treesEquivalent: Math.round(totalImpact.treesEquivalent * 100) / 100,
         },

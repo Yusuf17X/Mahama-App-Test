@@ -19,6 +19,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const clearAuthState = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const savedToken = localStorage.getItem("token");
@@ -38,18 +45,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           } catch (error) {
             // If JWT is malformed or invalid, clear auth state silently
-            if (error instanceof Error && error.message.includes("jwt")) {
-              setToken(null);
-              setUser(null);
-              localStorage.removeItem("token");
-              localStorage.removeItem("user");
+            if (error instanceof Error && error.message.toLowerCase().includes("jwt")) {
+              clearAuthState();
             } else {
               console.error("Failed to refresh user data:", error);
             }
           }
         } catch {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          clearAuthState();
         }
       }
       setIsInitialized(true);
@@ -80,10 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuthState();
   };
 
   const isLoggedIn = !!user;

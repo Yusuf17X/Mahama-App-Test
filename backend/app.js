@@ -52,11 +52,8 @@ app.use(cookieParser());
 app.use(mongoSanitize());
 
 // Sanitization against XSS
-//! NEEDS REVIEW AFTER AI
 // escape all HTML in body/params:
-app.use(inputSanitizer({ mode: "escape" }));
-// OR strip tags completely:
-// app.use(inputSanitizer({ mode: 'strip' }));
+app.use(inputSanitizer);
 
 // HTTP Parameter Pollution protection
 app.use(
@@ -66,9 +63,6 @@ app.use(
 );
 
 app.use(compression());
-
-// // Serve static files from public directory
-// app.use(express.static("public"));
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/schools", schoolRouter);

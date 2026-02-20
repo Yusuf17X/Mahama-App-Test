@@ -1,18 +1,13 @@
-const catchAsync = require('../utils/catchAsync');
-const UserChallenge = require('../models/userChallengeModel');
-const { calculateTotalImpact } = require('../utils/ecoImpact');
+const catchAsync = require("../utils/catchAsync");
+const { calculateTotalImpact } = require("../utils/ecoImpact");
 
 // GET /api/v1/dashboard/public - No authentication required
 exports.getPublicDashboard = catchAsync(async (req, res, next) => {
-  // 1. Get all approved challenges with populated challenge data
-  const approvedChallenges = await UserChallenge.find({ status: 'approved' })
-    .populate('challenge_id');
-
   // 2. Calculate total eco impact using utility function
-  const totalImpact = calculateTotalImpact(approvedChallenges);
+  const totalImpact = await calculateTotalImpact();
 
   // 3. Get top 5 schools for leaderboard
-  const User = require('../models/userModel');
+  const User = require("../models/userModel");
   const topSchoolsData = await User.aggregate([
     {
       $match: {
@@ -58,7 +53,8 @@ exports.getPublicDashboard = catchAsync(async (req, res, next) => {
   // Map to frontend format with medals
   const topSchools = topSchoolsData.map((school, index) => ({
     rank: index + 1,
-    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
+    medal:
+      index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
     name: school.name,
     city: school.city,
     points: school.totalPoints,
@@ -67,15 +63,16 @@ exports.getPublicDashboard = catchAsync(async (req, res, next) => {
 
   // 4. Return response with eco impact and top schools
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
       ecoImpact: {
         co2Saved: Math.round(totalImpact.co2SavedKg * 100) / 100,
         waterSaved: Math.round(totalImpact.waterSavedLiters * 100) / 100,
-        plasticSaved: Math.round(totalImpact.plasticSavedGrams * 100 / 1000) / 100, // Convert grams to kg
+        plasticSaved:
+          Math.round((totalImpact.plasticSavedGrams * 100) / 1000) / 100,
         energySaved: Math.round(totalImpact.energySavedKwh * 100) / 100,
         treesEquivalent: Math.round(totalImpact.treesEquivalent * 100) / 100,
-        totalChallengesCompleted: approvedChallenges.length,
+        totalChallengesCompleted: totalImpact.totalChallengesCompleted || 0,
       },
       topSchools,
     },

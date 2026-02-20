@@ -50,15 +50,24 @@ const challengeSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User",
       // Required for school_task challenges - references challenge_type field
-      required: function() {
+      required: function () {
         return this.challenge_type === "school_task";
       },
     },
     ecoImpact: {
       category: {
         type: String,
-        enum: ['planting', 'recycling', 'water', 'transport', 'energy', 'cleanup', 'waste', 'awareness'],
-        required: [true, 'A challenge must have an eco impact category'],
+        enum: [
+          "planting",
+          "recycling",
+          "water",
+          "transport",
+          "energy",
+          "cleanup",
+          "waste",
+          "awareness",
+        ],
+        required: [true, "A challenge must have an eco impact category"],
       },
       co2SavedKg: { type: Number, default: 0 },
       co2AbsorbedKgPerYear: { type: Number, default: 0 },

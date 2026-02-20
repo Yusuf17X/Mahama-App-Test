@@ -16,7 +16,15 @@ const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 const getUTCDayStart = () => {
   const now = new Date();
   const utcDay = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0)
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
   );
   return utcDay;
 };
@@ -27,7 +35,7 @@ const getUTCDayStart = () => {
  */
 const getUTCWeekStart = () => {
   const now = new Date();
-  const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const dayOfWeek = now.getUTCDay(); // 0 = Sunday
   const utcWeekStart = new Date(
     Date.UTC(
       now.getUTCFullYear(),
@@ -36,8 +44,8 @@ const getUTCWeekStart = () => {
       0,
       0,
       0,
-      0
-    )
+      0,
+    ),
   );
   return utcWeekStart;
 };
@@ -109,7 +117,10 @@ const getAvailableChallenges = (challenges, userChallenges) => {
     // Only consider approved challenges
     if (uc.status === "approved") {
       // For recurring challenges, keep the most recent completion
-      if (!completionMap[challengeId] || uc.createdAt > completionMap[challengeId]) {
+      if (
+        !completionMap[challengeId] ||
+        uc.createdAt > completionMap[challengeId]
+      ) {
         completionMap[challengeId] = uc.createdAt;
       }
     }
@@ -126,8 +137,12 @@ const getAvailableChallenges = (challenges, userChallenges) => {
       return {
         ...challenge.toObject(),
         lastCompletedAt: lastCompletion || null,
-        completedToday: lastCompletion ? isWithinCurrentUTCDay(lastCompletion) : false,
-        completedThisWeek: lastCompletion ? isWithinCurrentUTCWeek(lastCompletion) : false,
+        completedToday: lastCompletion
+          ? isWithinCurrentUTCDay(lastCompletion)
+          : false,
+        completedThisWeek: lastCompletion
+          ? isWithinCurrentUTCWeek(lastCompletion)
+          : false,
       };
     });
 };
@@ -142,13 +157,16 @@ const getChallengesWithStatus = (challenges, userChallenges) => {
   // Create a map of challenge completions by challenge ID
   const completionMap = {};
   const pendingMap = {};
-  
+
   userChallenges.forEach((uc) => {
     const challengeId = uc.challenge_id.toString();
-    
+
     if (uc.status === "approved") {
       // For recurring challenges, keep the most recent completion
-      if (!completionMap[challengeId] || uc.createdAt > completionMap[challengeId]) {
+      if (
+        !completionMap[challengeId] ||
+        uc.createdAt > completionMap[challengeId]
+      ) {
         completionMap[challengeId] = uc.createdAt;
       }
     } else if (uc.status === "pending") {
@@ -164,13 +182,17 @@ const getChallengesWithStatus = (challenges, userChallenges) => {
     const challengeId = challenge._id.toString();
     const lastCompletion = completionMap[challengeId];
     const lastPending = pendingMap[challengeId];
-    
-    const completedToday = lastCompletion ? isWithinCurrentUTCDay(lastCompletion) : false;
-    const completedThisWeek = lastCompletion ? isWithinCurrentUTCWeek(lastCompletion) : false;
-    
+
+    const completedToday = lastCompletion
+      ? isWithinCurrentUTCDay(lastCompletion)
+      : false;
+    const completedThisWeek = lastCompletion
+      ? isWithinCurrentUTCWeek(lastCompletion)
+      : false;
+
     let isAvailable = isChallengeAvailable(challenge, lastCompletion);
     let status = "available";
-    
+
     if (lastPending) {
       status = "pending";
       isAvailable = false;
@@ -186,7 +208,7 @@ const getChallengesWithStatus = (challenges, userChallenges) => {
         isAvailable = false;
       }
     }
-    
+
     return {
       ...challenge.toObject(),
       isAvailable,

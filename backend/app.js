@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
@@ -21,6 +22,10 @@ const globalErrorHandler = require("./controllers/errorController");
 
 const app = express();
 
+app.use(cors());
+
+app.use(express.static(path.join(__dirname, "public")));
+
 app.use(helmet());
 
 if (process.env.NODE_ENV === "development") {
@@ -28,8 +33,6 @@ if (process.env.NODE_ENV === "development") {
 }
 
 app.enable("trust proxy");
-
-app.use(cors());
 
 const limiter = rateLimit({
   max: 100,
@@ -64,8 +67,8 @@ app.use(
 
 app.use(compression());
 
-// Serve static files from public directory
-app.use(express.static("public"));
+// // Serve static files from public directory
+// app.use(express.static("public"));
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/schools", schoolRouter);

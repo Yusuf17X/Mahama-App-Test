@@ -1,13 +1,12 @@
 const catchAsync = require("../utils/catchAsync");
 const { calculateTotalImpact } = require("../utils/ecoImpact");
+const User = require("../models/userModel");
 
-// GET /api/v1/dashboard/public - No authentication required
 exports.getPublicDashboard = catchAsync(async (req, res, next) => {
-  // 2. Calculate total eco impact using utility function
+  // 1. Calculate total eco impact using utility function
   const totalImpact = await calculateTotalImpact();
 
-  // 3. Get top 5 schools for leaderboard
-  const User = require("../models/userModel");
+  // 2. Get top 5 schools for leaderboard
   const topSchoolsData = await User.aggregate([
     {
       $match: {
@@ -61,7 +60,7 @@ exports.getPublicDashboard = catchAsync(async (req, res, next) => {
     students: school.studentCount,
   }));
 
-  // 4. Return response with eco impact and top schools
+  // 3. Return response with eco impact and top schools
   res.status(200).json({
     status: "success",
     data: {

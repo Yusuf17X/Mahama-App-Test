@@ -38,7 +38,6 @@ exports.getAllSchools = catchAsync(async (req, res, next) => {
 
 exports.createSchool = factory.createOne(School);
 
-// Leaderboard: Iraq-level school leaderboard
 exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(req.user._id);
 
@@ -92,7 +91,8 @@ exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
   // Create leaderboard with ranks and medals
   const leaderboard = top100Schools.map((school, index) => ({
     rank: index + 1,
-    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
+    medal:
+      index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
     name: school.name,
     city: school.city,
     points: school.totalPoints,
@@ -196,34 +196,35 @@ exports.getSchoolsLeaderboard = catchAsync(async (req, res, next) => {
   });
 });
 
-// GET /api/v1/schools/:id/eco-stats
 exports.getSchoolEcoStats = catchAsync(async (req, res, next) => {
   // 1. Get the school
   const school = await School.findById(req.params.id);
   if (!school) {
-    return next(new AppError('School not found', 404));
+    return next(new AppError("School not found", 404));
   }
 
   // 2. Get all users in this school
   const schoolUsers = await User.find({ school_id: req.params.id });
-  const userIds = schoolUsers.map(u => u._id);
+  const userIds = schoolUsers.map((u) => u._id);
 
   // 3. Get all approved challenges for these users
   const approvedChallenges = await UserChallenge.find({
     user_id: { $in: userIds },
-    status: 'approved'
-  }).populate('challenge_id');
+    status: "approved",
+  }).populate("challenge_id");
 
   // 4. Calculate total eco impact using utility function
-  const totalImpact = calculateTotalImpact(approvedChallenges);
+  const totalImpact = calculateTotalImpact();
 
   // 5. Calculate participation stats
-  const activeStudents = new Set(approvedChallenges.map(uc => uc.user_id.toString())).size;
+  const activeStudents = new Set(
+    approvedChallenges.map((uc) => uc.user_id.toString()),
+  ).size;
   const totalPoints = schoolUsers.reduce((sum, u) => sum + (u.points || 0), 0);
 
   // 6. Return response
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
       school: {
         id: school._id,
@@ -232,8 +233,12 @@ exports.getSchoolEcoStats = catchAsync(async (req, res, next) => {
       },
       ecoImpact: {
         co2SavedKg: Math.round(totalImpact.co2SavedKg * 100) / 100,
-        co2AbsorbedKgPerYear: Math.round(totalImpact.co2AbsorbedKgPerYear * 100) / 100,
-        totalCo2Impact: Math.round((totalImpact.co2SavedKg + totalImpact.co2AbsorbedKgPerYear) * 100) / 100,
+        co2AbsorbedKgPerYear:
+          Math.round(totalImpact.co2AbsorbedKgPerYear * 100) / 100,
+        totalCo2Impact:
+          Math.round(
+            (totalImpact.co2SavedKg + totalImpact.co2AbsorbedKgPerYear) * 100,
+          ) / 100,
         waterSavedLiters: Math.round(totalImpact.waterSavedLiters * 100) / 100,
         plasticSavedGrams: Math.round(totalImpact.plasticSavedGrams),
         plasticSavedKg: Math.round(totalImpact.plasticSavedGrams / 10) / 100,
@@ -243,9 +248,10 @@ exports.getSchoolEcoStats = catchAsync(async (req, res, next) => {
       participation: {
         totalStudents: schoolUsers.length,
         activeStudents,
-        participationRate: schoolUsers.length > 0 
-          ? Math.round((activeStudents / schoolUsers.length) * 100) + '%' 
-          : '0%',
+        participationRate:
+          schoolUsers.length > 0
+            ? Math.round((activeStudents / schoolUsers.length) * 100) + "%"
+            : "0%",
         totalChallengesCompleted: approvedChallenges.length,
         totalPoints,
       },

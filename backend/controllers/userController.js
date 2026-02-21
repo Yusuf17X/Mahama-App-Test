@@ -2,31 +2,22 @@ const multer = require("multer");
 const sharp = require("sharp");
 const catchAsync = require("./../utils/catchAsync");
 const User = require("./../models/userModel");
-const Challenge = require("./../models/challengeModel");
 const AppError = require("./../utils/appError");
 const factory = require("./handlerFactory");
 
 const userChallenge = require("./../models/userChallengeModel");
 const userBadge = require("./../models/userBadgeModel");
-
-// Helper function to get teacher's advised challenge IDs
-const getTeacherChallengeIds = async (teacherId) => {
-  const teacherChallenges = await Challenge.find({ 
-    teacher_id: teacherId,
-    challenge_type: "school_task"
-  }).select("_id");
-  return teacherChallenges.map(c => c._id);
-};
-
-// const multerStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "public/users/img");
-//   },
-//   filename: (req, file, cb) => {
-//     const ext = file.mimetype.split("/")[1];
-//     cb(null, `user-${req.user._id}-${Date.now()}.${ext}`);
-//   },
-// });
+const Badge = require("./../models/badgeModel");
+const { calculateTotalImpact } = require("./../utils/ecoImpact");
+const { formatMemberSince } = require("./../utils/translations");
+const {
+  getTeacherChallengeIds,
+  calcLevel,
+  countCompletedChallenges,
+  calculateStreak,
+  getActivities,
+  getLeaderboard,
+} = require("../utils/calcStats");
 
 const multerStorage = multer.memoryStorage();
 
@@ -71,14 +62,6 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.getProfile = catchAsync(async (req, res, next) => {
-  const Badge = require("./../models/badgeModel");
-  const {
-    t,
-    formatMemberSince,
-    MS_PER_DAY,
-  } = require("./../utils/translations");
-  const { calculateTotalImpact } = require("./../utils/ecoImpact");
-
   // Get user with populated school
   const user = await User.findById(req.user._id).populate(
     "school_id",
@@ -90,85 +73,17 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   }
 
   // Calculate level based on points
-  const { points } = user;
-  let level = {
-    current: 1,
-    name: "beginner",
-    nameAr: t("beginner"),
-    pointsToNextLevel: 50,
-    hasNextLevel: true,
-  };
-
-  if (points >= 800) {
-    level = {
-      current: 6,
-      name: "eco_expert",
-      nameAr: t("eco_expert"),
-      pointsToNextLevel: 0,
-      hasNextLevel: false,
-    };
-  } else if (points >= 500) {
-    level = {
-      current: 5,
-      name: "eco_hero",
-      nameAr: t("eco_hero"),
-      pointsToNextLevel: 800 - points,
-      hasNextLevel: true,
-    };
-  } else if (points >= 300) {
-    level = {
-      current: 4,
-      name: "enthusiast",
-      nameAr: t("enthusiast"),
-      pointsToNextLevel: 500 - points,
-      hasNextLevel: true,
-    };
-  } else if (points >= 150) {
-    level = {
-      current: 3,
-      name: "active",
-      nameAr: t("active"),
-      pointsToNextLevel: 300 - points,
-      hasNextLevel: true,
-    };
-  } else if (points >= 50) {
-    level = {
-      current: 2,
-      name: "learner",
-      nameAr: t("learner"),
-      pointsToNextLevel: 150 - points,
-      hasNextLevel: true,
-    };
-  }
+  const level = calcLevel(user.points);
 
   // Get completed challenges count based on role
-  let completedChallenges = 0;
-  if (user.role === "teacher") {
-    // Teachers: count school_task challenges they advise that have been approved
-    const challengeIds = await getTeacherChallengeIds(user._id);
-    completedChallenges = await userChallenge.countDocuments({
-      challenge_id: { $in: challengeIds },
-      status: "approved",
-    });
-  } else {
-    // Regular users and admins: count their own approved challenges
-    completedChallenges = await userChallenge.countDocuments({
-      user_id: req.user._id,
-      status: "approved",
-    });
-  }
+  const completedChallenges = await countCompletedChallenges(
+    user,
+    userChallenge,
+    req,
+  );
 
   // Calculate streak
-  let streak = 0;
-  if (user.lastActivityDate) {
-    const now = new Date();
-    const lastActivity = new Date(user.lastActivityDate);
-    const diffDays = Math.floor((now - lastActivity) / MS_PER_DAY);
-
-    if (diffDays === 0 || diffDays === 1) {
-      streak = user.currentStreak;
-    }
-  }
+  const streak = calculateStreak(user);
 
   // Format member since date
   const memberSinceFormatted = formatMemberSince(user.createdAt);
@@ -191,9 +106,9 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     // Teachers: get all approved challenges for school tasks they advise
     const challengeIds = await getTeacherChallengeIds(user._id);
     approvedUserChallenges = await userChallenge
-      .find({ 
+      .find({
         challenge_id: { $in: challengeIds },
-        status: "approved" 
+        status: "approved",
       })
       .populate("challenge_id");
   } else {
@@ -211,9 +126,9 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     // Teachers: get challenges they've advised that were approved
     const challengeIds = await getTeacherChallengeIds(user._id);
     userChallenges = await userChallenge
-      .find({ 
+      .find({
         challenge_id: { $in: challengeIds },
-        status: "approved" 
+        status: "approved",
       })
       .populate("challenge_id", "name points")
       .populate("user_id", "name")
@@ -237,40 +152,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     .limit(5)
     .lean();
 
-  const activities = [
-    ...userChallenges.map((uc) => {
-      // For teachers, show student name who completed the task
-      const activityText = user.role === "teacher" 
-        ? `تمت الموافقة على: ${uc.challenge_id?.name || "Unknown Challenge"} من ${uc.user_id?.name || "طالب"}`
-        : `أكملت مهمة: ${uc.challenge_id?.name || "Unknown Challenge"}`;
-      return {
-        _id: uc._id.toString(),
-        type: "challenge",
-        text: activityText,
-        icon: "✅",
-        points: uc.challenge_id?.points || 0,
-        date: uc.createdAt,
-      };
-    }),
-    ...userBadgesActivities.map((ub) => ({
-      _id: ub._id.toString(),
-      type: "badge",
-      text: `حصلت على شارة: ${ub.badge_id?.name || "Unknown Badge"}`,
-      icon: ub.badge_id?.icon || "🎖",
-      points: 0,
-      date: ub.createdAt,
-    })),
-  ]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
-    .map((activity) => ({
-      _id: activity._id,
-      type: activity.type,
-      text: activity.text,
-      icon: activity.icon,
-      points: activity.points,
-      time: formatMemberSince(activity.date),
-    }));
+  const activities = getActivities(user, userChallenges, userBadgesActivities);
 
   // Return user object matching frontend interface
   res.status(200).json({
@@ -293,7 +175,8 @@ exports.getProfile = catchAsync(async (req, res, next) => {
         ecoImpact: {
           co2Saved: Math.round(totalImpact.co2SavedKg * 100) / 100,
           waterSaved: Math.round(totalImpact.waterSavedLiters * 100) / 100,
-          plasticSaved: Math.round(totalImpact.plasticSavedGrams * 100 / 1000) / 100, // Convert to kg
+          plasticSaved:
+            Math.round((totalImpact.plasticSavedGrams * 100) / 1000) / 100, // Convert to kg
           energySaved: Math.round(totalImpact.energySavedKwh * 100) / 100,
           treesEquivalent: Math.round(totalImpact.treesEquivalent * 100) / 100,
         },
@@ -304,6 +187,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm)
     return next(
@@ -369,14 +253,7 @@ exports.getSchoolLeaderboard = catchAsync(async (req, res, next) => {
     .lean();
 
   // Create leaderboard with ranks
-  const leaderboard = top100Users.map((user, index) => ({
-    rank: index + 1,
-    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
-    name: user.name,
-    points: user.points,
-    school: user.school_id?.name || "",
-    isCurrentUser: user._id.toString() === currentUser._id.toString(),
-  }));
+  const leaderboard = getLeaderboard(currentUser, top100Users);
 
   // Check if current user is in top 100
   const currentUserInTop100 = leaderboard.find((entry) => entry.isCurrentUser);
@@ -427,14 +304,7 @@ exports.getIraqLeaderboard = catchAsync(async (req, res, next) => {
     .lean();
 
   // Create leaderboard with ranks
-  const leaderboard = top100Users.map((user, index) => ({
-    rank: index + 1,
-    medal: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
-    name: user.name,
-    points: user.points,
-    school: user.school_id?.name || "",
-    isCurrentUser: user._id.toString() === currentUser._id.toString(),
-  }));
+  const leaderboard = getLeaderboard(currentUser, top100Users);
 
   // Check if current user is in top 100
   const currentUserInTop100 = leaderboard.find((entry) => entry.isCurrentUser);

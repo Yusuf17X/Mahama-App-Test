@@ -1,5 +1,4 @@
 const multer = require("multer");
-const factory = require("./handlerFactory");
 const UserChallenge = require("../models/userChallengeModel");
 const Challenge = require("../models/challengeModel");
 const User = require("../models/userModel");
@@ -68,7 +67,9 @@ exports.createUserChallenge = catchAsync(async (req, res, next) => {
   // Generate encouraging phrase
   let encouragingPhrase = null;
   if (userChallenge.challenge_id && userChallenge.challenge_id.ecoImpact) {
-    encouragingPhrase = generateEncouragingPhrase(userChallenge.challenge_id.ecoImpact);
+    encouragingPhrase = generateEncouragingPhrase(
+      userChallenge.challenge_id.ecoImpact,
+    );
   }
 
   res.status(201).json({
@@ -92,7 +93,9 @@ exports.getAllUserChallenges = catchAsync(async (req, res, next) => {
   // Teacher can only see challenges for students in their school
   else if (req.user.role === "teacher") {
     // Get all users in the teacher's school
-    const schoolUsers = await User.find({ school_id: req.user.school_id }).select("_id");
+    const schoolUsers = await User.find({
+      school_id: req.user.school_id,
+    }).select("_id");
     const userIds = schoolUsers.map((u) => u._id);
     filter.user_id = { $in: userIds };
   }
@@ -114,18 +117,19 @@ exports.getAllUserChallenges = catchAsync(async (req, res, next) => {
     .sort({ createdAt: -1 });
 
   // Build absolute URL for images
-  // Use environment variable if available, otherwise construct from request headers
-  // When behind proxy, ensure express app has trust proxy enabled
-  const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
+  // construct from request headers
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
 
   // Transform response to match frontend interface
-  const transformedChallenges = userChallenges.map(uc => ({
+  const transformedChallenges = userChallenges.map((uc) => ({
     _id: uc._id,
     challengeId: uc.challenge_id?._id,
     challengeTitle: uc.challenge_id?.name,
     challengeEmoji: uc.challenge_id?.icon,
     status: uc.status,
-    photo: uc.proof_url ? `${baseUrl}${USER_CHALLENGES_IMG_PATH}${uc.proof_url}` : null,
+    photo: uc.proof_url
+      ? `${baseUrl}${USER_CHALLENGES_IMG_PATH}${uc.proof_url}`
+      : null,
     studentName: uc.user_id?.name,
     schoolName: uc.user_id?.school_id?.name,
     createdAt: uc.createdAt,
@@ -171,7 +175,8 @@ exports.updateUserChallengeStatus = catchAsync(async (req, res, next) => {
     // Teacher can only approve/reject challenges from students in their school
     if (
       !userChallenge.user_id.school_id ||
-      userChallenge.user_id.school_id.toString() !== req.user.school_id.toString()
+      userChallenge.user_id.school_id.toString() !==
+        req.user.school_id.toString()
     ) {
       return next(
         new AppError(

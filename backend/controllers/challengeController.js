@@ -22,7 +22,6 @@ exports.getAllChallenges = catchAsync(async (req, res, next) => {
     page: req.query.page || 1,
   };
 
-  // Use APIFeatures for filtering, sorting, field limiting, and pagination
   const features = new APIFeatures(Challenge.find(filter), queryString)
     .filter()
     .sort()
@@ -58,8 +57,8 @@ exports.getAvailableChallenges = catchAsync(async (req, res, next) => {
       return next(
         new AppError(
           "Invalid challenge_type. Must be 'solo' or 'school_task'",
-          400
-        )
+          400,
+        ),
       );
     }
     filter.challenge_type = req.query.challenge_type;
@@ -76,7 +75,7 @@ exports.getAvailableChallenges = catchAsync(async (req, res, next) => {
   // Get challenges with completion status based on UTC boundaries
   const challengesWithStatus = challengeScheduler.getChallengesWithStatus(
     challenges,
-    userChallenges
+    userChallenges,
   );
 
   res.status(200).json({

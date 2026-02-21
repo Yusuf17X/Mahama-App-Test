@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModel");
@@ -30,13 +29,18 @@ const createSendToken = (user, statusCode, res) => {
 
   // Format user object with schoolName and schoolCity if school_id is populated
   // Handle both populated and unpopulated school_id cases
-  const isSchoolPopulated = user.school_id && typeof user.school_id === 'object' && user.school_id.name;
+  const isSchoolPopulated =
+    user.school_id && typeof user.school_id === "object" && user.school_id.name;
   const userResponse = {
     _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
-    school_id: isSchoolPopulated ? user.school_id._id.toString() : (user.school_id ? user.school_id.toString() : ""),
+    school_id: isSchoolPopulated
+      ? user.school_id._id.toString()
+      : user.school_id
+        ? user.school_id.toString()
+        : "",
     schoolName: isSchoolPopulated ? user.school_id.name : "",
     schoolCity: isSchoolPopulated ? user.school_id.city : "",
     points: user.points,
@@ -72,7 +76,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Please provide email and password!", 400));
 
-  const user = await User.findOne({ email }).select("+password").populate("school_id", "name city");
+  const user = await User.findOne({ email })
+    .select("+password")
+    .populate("school_id", "name city");
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password!", 401));

@@ -18,7 +18,7 @@ router.get(
 );
 
 // School eco-stats route - public, no authentication
-router.get('/:id/eco-stats', schoolController.getSchoolEcoStats);
+router.get("/:id/eco-stats", schoolController.getSchoolEcoStats);
 
 router
   .route("/")

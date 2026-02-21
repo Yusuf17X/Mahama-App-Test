@@ -8,7 +8,7 @@ const router = express.Router();
 router.get(
   "/available",
   authController.protect,
-  challengeController.getAvailableChallenges
+  challengeController.getAvailableChallenges,
 );
 
 router
